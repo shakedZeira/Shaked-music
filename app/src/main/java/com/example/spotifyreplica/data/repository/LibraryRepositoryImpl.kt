@@ -42,6 +42,10 @@ class LibraryRepositoryImpl @Inject constructor(
 
     override fun observePlaylists(): Flow<List<PlaylistEntity>> = playlistDao.observePlaylists()
 
+    override suspend fun upsertPlaylists(playlists: List<PlaylistEntity>) {
+        playlists.forEach { playlistDao.upsert(it) }
+    }
+
     override suspend fun upsertDownload(item: DownloadItem) {
         downloadDao.upsert(item.toEntity(updatedAtMs = System.currentTimeMillis()))
     }

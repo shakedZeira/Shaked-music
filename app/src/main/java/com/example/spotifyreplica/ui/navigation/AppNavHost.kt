@@ -24,7 +24,10 @@ fun AppNavHost(
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Library.route) {
-            LibraryScreen()
+            LibraryScreen(
+                onConnectSpotify = { navController.navigate(Screen.Login.route) },
+                onPlaylistClick = { id -> navController.navigate("${Screen.Playlist.route}/$id") },
+            )
         }
         composable(Screen.Search.route) {
             SearchScreen()
@@ -50,7 +53,9 @@ fun AppNavHost(
                 },
             ),
         ) {
-            PlaylistScreen()
+            PlaylistScreen(
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }

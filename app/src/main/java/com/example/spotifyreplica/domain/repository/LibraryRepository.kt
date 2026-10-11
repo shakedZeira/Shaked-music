@@ -24,6 +24,12 @@ interface LibraryRepository {
     /** Cached playlists. */
     fun observePlaylists(): Flow<List<PlaylistEntity>>
 
+    /**
+     * Insert/replace cached playlists in one call (e.g. after syncing the user's Spotify library).
+     * Existing rows are overwritten by [PlaylistEntity.spotifyId].
+     */
+    suspend fun upsertPlaylists(playlists: List<PlaylistEntity>)
+
     /** Insert or replace a queue entry (e.g. when a download is enqueued). */
     suspend fun upsertDownload(item: DownloadItem)
 
