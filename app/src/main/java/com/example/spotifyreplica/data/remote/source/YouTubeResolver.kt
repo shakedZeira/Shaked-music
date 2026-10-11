@@ -1,10 +1,12 @@
 package com.example.spotifyreplica.data.remote.source
 
+import android.util.Log
 import com.example.spotifyreplica.domain.model.Track
 import com.example.spotifyreplica.domain.source.AudioContainer
 import com.example.spotifyreplica.domain.source.AudioSourceResolver
 import com.example.spotifyreplica.domain.source.ResolvedAudio
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.schabi.newpipe.extractor.MediaFormat
@@ -35,33 +37,47 @@ class YouTubeResolver @Inject constructor(
 ) : AudioSourceResolver {
 
     override suspend fun resolve(track: Track): ResolvedAudio? = withContext(Dispatchers.IO) {
-        runCatching {
+        try {
             NewPipeBridge.ensureInitialized(downloader)
 
             val service = ServiceList.YouTube
-            val page = service.getSearchExtractor(buildSearchQuery(track)).getInitialPage()
+            val searchExtractor = service.getSearchExtractor(buildSearchQuery(track))
+            searchExtractor.fetchPage()
+            val page = searchExtractor.getInitialPage()
 
             // Prefer genuine stream results (skip channels/playlists that occasionally rank first).
             val streamItem = page.items.asSequence()
                 .filterIsInstance<StreamInfoItem>()
                 .firstOrNull()
                 ?: page.items.firstOrNull()
-                ?: return@runCatching null
+                ?: return@withContext null
 
             val streamExtractor = service.getStreamExtractor(streamItem.url)
             streamExtractor.fetchPage()
 
             val best = selectBestAudioStream(streamExtractor.getAudioStreams())
-                ?: return@runCatching null
+                ?: return@withContext null
 
-            val url = best.content.takeIf { best.isUrl() } ?: return@runCatching null
+            val url = best.content.takeIf { best.isUrl() } ?: return@withContext null
             ResolvedAudio(
                 url = url,
                 container = containerFor(best),
                 bitrateKbps = best.getAverageBitrate().takeIf { it > 0 }?.div(1000),
                 expiresAtMs = null, // NewPipe does not expose stream expiry -> never cached.
             )
-        }.getOrNull()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Previously swallowed by runCatching{}.getOrNull(), which made a resolver failure
+            // (network/NewPipe init/parse) indistinguishable from a genuine "no match". Log it and
+            // let TrackDownloaderCore map it to a Retryable/Permanent outcome so the UI can show why.
+            Log.w(TAG, "YouTube resolve failed for '${track.title}'", e)
+            throw e
+        }
+    }
+
+    private companion object {
+        const val TAG = "YouTubeResolver"
     }
 }
 
