@@ -36,7 +36,9 @@ fun AppNavHost(
             DownloadsScreen()
         }
         composable(Screen.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(
+                onConnectSpotify = { navController.navigate(Screen.Login.route) },
+            )
         }
         composable(Screen.Player.route) {
             PlayerScreen()
