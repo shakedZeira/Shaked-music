@@ -34,6 +34,12 @@ class SettingsManager @Inject constructor(
 
         /** Compliant default: index audio already on the device instead of downloading it. */
         const val AUDIO_SOURCE_LOCAL = "local"
+
+        /**
+         * OPT-IN YouTube source. Off by default; only usable by a personal/sideloaded build (plan
+         * Q3). The resolver is isolated and guarded behind this flag.
+         */
+        const val AUDIO_SOURCE_YOUTUBE = "youtube"
     }
 
     private val audioSourceKey = stringPreferencesKey(AUDIO_SOURCE_KEY)
