@@ -9,6 +9,7 @@ import com.example.spotifyreplica.data.db.entity.TrackEntity
 import com.example.spotifyreplica.domain.model.DownloadItem
 import com.example.spotifyreplica.domain.model.DownloadStatus
 import com.example.spotifyreplica.domain.model.LibraryTrack
+import com.example.spotifyreplica.domain.model.Track
 import com.example.spotifyreplica.domain.repository.LibraryRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -82,6 +83,53 @@ class LibraryRepositoryImpl @Inject constructor(
     override suspend fun clearAll() {
         downloadDao.deleteAll()
     }
+
+    override suspend fun cacheTrack(track: Track) {
+        val existing = trackDao.getById(track.id)
+        trackDao.upsert(
+            TrackEntity(
+                spotifyId = track.id,
+                title = track.title,
+                artistsCsv = TrackEntity.artistsToCsv(track.artists),
+                album = track.album,
+                durationMs = track.durationMs,
+                artworkUrl = track.artworkUrl,
+                localPath = existing?.localPath,
+                sizeBytes = existing?.sizeBytes,
+                container = existing?.container ?: "",
+                bitrateKbps = existing?.bitrateKbps,
+                downloadedAtMs = existing?.downloadedAtMs
+            )
+        )
+    }
+
+    override suspend fun cachedTrack(spotifyId: String): Track? =
+        trackDao.getById(spotifyId)?.toTrack()
+
+    override suspend fun upsertTrack(
+        track: Track,
+        localPath: String?,
+        sizeBytes: Long?,
+        container: String,
+        bitrateKbps: Int?,
+        downloadedAtMs: Long?
+    ) {
+        trackDao.upsert(
+            TrackEntity(
+                spotifyId = track.id,
+                title = track.title,
+                artistsCsv = TrackEntity.artistsToCsv(track.artists),
+                album = track.album,
+                durationMs = track.durationMs,
+                artworkUrl = track.artworkUrl,
+                localPath = localPath,
+                sizeBytes = sizeBytes,
+                container = container,
+                bitrateKbps = bitrateKbps,
+                downloadedAtMs = downloadedAtMs
+            )
+        )
+    }
 }
 
 private fun DownloadEntity.toDomain(title: String?): DownloadItem = DownloadItem(
@@ -117,4 +165,15 @@ private fun TrackEntity.toLibraryTrack(localPath: String): LibraryTrack = Librar
     durationMs = durationMs,
     container = container,
     bitrateKbps = bitrateKbps
+)
+
+private fun TrackEntity.toTrack(): Track = Track(
+    id = spotifyId,
+    title = title,
+    artists = artistList(),
+    album = album,
+    artworkUrl = artworkUrl,
+    durationMs = durationMs,
+    isrc = null,
+    spotifyUri = null
 )
