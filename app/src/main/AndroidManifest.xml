@@ -66,6 +66,18 @@
                 tools:node="remove" />
         </provider>
 
+        <!--
+            WorkManager's SystemForegroundService ships without a foregroundServiceType, so on
+            Android 14+ calling setForeground(..., FOREGROUND_SERVICE_TYPE_DATA_SYNC) throws
+            "foregroundServiceType 0x1 is not a subset of ... 0x0" and kills the process. Merge the
+            dataSync type into the library's service declaration (FOREGROUND_SERVICE_DATA_SYNC is
+            already requested above).
+        -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
         <!-- Media3 background playback (ExoPlayer + MediaSession) -->
         <service
             android:name=".playback.PlaybackService"
