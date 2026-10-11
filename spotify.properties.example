@@ -1,0 +1,14 @@
+# Copy this file to `spotify.properties` (same directory) and fill in your values.
+# `spotify.properties` is git-ignored and must NOT be committed.
+#
+# Create/configure a Spotify app at https://developer.spotify.com/dashboard to obtain
+# a Client ID, then paste it below. The value is baked into BuildConfig at build time,
+# so rebuild + reinstall after changing it.
+
+# Your Spotify app's Client ID (Web API).
+SPOTIFY_CLIENT_ID=
+
+# OAuth redirect URI. Register this EXACT value in the Spotify dashboard
+# (Redirect URIs). Custom scheme, host must be `callback`.
+# Defaults to spotifyreplica://callback when left blank.
+SPOTIFY_REDIRECT_URI=spotifyreplica://callback

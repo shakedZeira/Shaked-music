@@ -1,0 +1,14 @@
+<resources>
+
+    <!--
+        Plain platform theme — no com.google.android.material dependency. The Compose UI
+        supplies its own Material 3 colors; this only styles the window before Compose starts.
+    -->
+    <style name="Theme.SpotifyReplica" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/spotify_background</item>
+        <item name="android:statusBarColor">@color/spotify_background</item>
+        <item name="android:navigationBarColor">@color/spotify_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+</resources>
