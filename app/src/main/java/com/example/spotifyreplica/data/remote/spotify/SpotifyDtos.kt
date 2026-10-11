@@ -1,0 +1,118 @@
+package com.example.spotifyreplica.data.remote.spotify
+
+import com.squareup.moshi.Json
+
+/**
+ * Moshi DTOs for the Spotify Web API, aligned with the **Feb/March 2026 dev-mode migration**:
+ *
+ * - The playlist contents endpoint is `GET /playlists/{id}/items` and the playlist field is
+ *   **`items`** (`items.items[].item`) — `/tracks` and a `tracks` field are gone.
+ * - `GET /search?type=track` caps `limit` at **10**.
+ * - `popularity`/`available_markets` were removed; `external_ids.isrc` is still present.
+ * - A playlist's `items` object may be **ABSENT** for playlists the user neither owns nor
+ *   collaborates on, so every collection field is optional/defaulted and unknown keys are ignored.
+ *
+ * Every field has a default so Moshi's reflective adapter can tolerate missing keys.
+ */
+
+/** `POST https://accounts.spotify.com/api/token` (PKCE: no client secret). */
+data class TokenResponse(
+    @Json(name = "access_token") val accessToken: String,
+    @Json(name = "token_type") val tokenType: String? = null,
+    val scope: String? = null,
+    @Json(name = "expires_in") val expiresIn: Long = 0L,
+    @Json(name = "refresh_token") val refreshToken: String? = null,
+)
+
+/** `GET /me`. `country`/`email`/`product`/`followers` are removed in dev mode. */
+data class SpotifyUserDto(
+    val id: String? = null,
+    @Json(name = "display_name") val displayName: String? = null,
+)
+
+data class SpotifyImageDto(
+    val url: String = "",
+    val width: Int? = null,
+    val height: Int? = null,
+)
+
+data class SpotifyArtistDto(
+    val id: String? = null,
+    val name: String = "",
+)
+
+data class SpotifyAlbumDto(
+    val id: String? = null,
+    val name: String = "",
+    val images: List<SpotifyImageDto> = emptyList(),
+)
+
+data class SpotifyExternalIdsDto(
+    val isrc: String? = null,
+)
+
+/** A Spotify track object. `popularity`/`available_markets` are never read. */
+data class SpotifyTrackDto(
+    val id: String = "",
+    val name: String = "",
+    val artists: List<SpotifyArtistDto> = emptyList(),
+    val album: SpotifyAlbumDto? = null,
+    @Json(name = "duration_ms") val durationMs: Long = 0L,
+    @Json(name = "external_ids") val externalIds: SpotifyExternalIdsDto? = null,
+    val uri: String? = null,
+    @Json(name = "is_local") val isLocal: Boolean = false,
+)
+
+/** One element of a playlist's `items` array; `item` is null for local files / episodes. */
+data class PlaylistItemDto(
+    val item: SpotifyTrackDto? = null,
+)
+
+/**
+ * The paging object returned by `GET /playlists/{id}/items`. The array field is `items` and may be
+ * absent entirely for playlists the user cannot read.
+ */
+data class PlaylistItemsPage(
+    val items: List<PlaylistItemDto> = emptyList(),
+    val total: Int = 0,
+    val offset: Int = 0,
+    val limit: Int = 0,
+    val next: String? = null,
+)
+
+/** A Spotify playlist object. In 2026 the contents summary field is `items` (`tracks` is gone). */
+data class SpotifyPlaylistDto(
+    val id: String = "",
+    val name: String = "",
+    val owner: SpotifyOwnerDto? = null,
+    val images: List<SpotifyImageDto> = emptyList(),
+    val items: PlaylistItemsPage? = null,
+)
+
+data class SpotifyOwnerDto(
+    val id: String? = null,
+    @Json(name = "display_name") val displayName: String? = null,
+)
+
+/** `GET /me/playlists` paging envelope. */
+data class PlaylistsPage(
+    val items: List<SpotifyPlaylistDto> = emptyList(),
+    val total: Int = 0,
+    val offset: Int = 0,
+    val limit: Int = 0,
+    val next: String? = null,
+)
+
+/** `GET /search?type=track` paging envelope for the nested `tracks` object. */
+data class SearchTracksPage(
+    val items: List<SpotifyTrackDto> = emptyList(),
+    val total: Int = 0,
+    val offset: Int = 0,
+    val limit: Int = 0,
+    val next: String? = null,
+)
+
+/** `GET /search` response. Other keys (`albums`, `artists`, ...) are ignored. */
+data class SearchResponse(
+    val tracks: SearchTracksPage? = null,
+)

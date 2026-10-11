@@ -18,10 +18,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SpotifyReplica">
 
-        <!--
-            Phase 2 will add the Spotify PKCE redirect activity and Phase 6 the Media3
-            playback service. The nav shell is the only component for now.
-        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -30,6 +26,22 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Spotify PKCE redirect: spotifyreplica://callback -->
+        <activity
+            android:name=".data.remote.spotify.SpotifyAuthActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.SpotifyReplica">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="spotifyreplica"
+                    android:host="callback" />
             </intent-filter>
         </activity>
     </application>
