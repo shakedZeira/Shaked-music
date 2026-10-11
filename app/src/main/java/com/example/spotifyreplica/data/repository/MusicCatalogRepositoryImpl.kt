@@ -107,7 +107,9 @@ internal fun emptyPage(offset: Int, limit: Int): Page<Track> =
     Page(items = emptyList(), offset = offset, limit = limit, total = 0, hasMore = false)
 
 internal fun SpotifyTrackDto.toDomain(): Track = Track(
-    id = id,
+    // Local files carry a null `id`; fall back to the (stable, unique) URI so the row never crashes
+    // and never collides with another blank id in Room.
+    id = id?.takeIf { it.isNotBlank() } ?: uri.orEmpty(),
     title = name,
     artists = artists.map { it.name }.filter { it.isNotBlank() },
     album = album?.name.orEmpty(),
@@ -121,7 +123,7 @@ internal fun SpotifyPlaylistDto.toSummary(): PlaylistSummary = PlaylistSummary(
     id = id,
     name = name,
     ownerName = owner?.displayName?.takeIf { it.isNotBlank() } ?: owner?.id.orEmpty(),
-    artworkUrl = images.bestArtworkUrl(),
+    artworkUrl = images?.bestArtworkUrl(),
     trackCount = items?.total ?: 0,
 )
 

@@ -12,7 +12,11 @@ import com.squareup.moshi.Json
  * - A playlist's `items` object may be **ABSENT** for playlists the user neither owns nor
  *   collaborates on, so every collection field is optional/defaulted and unknown keys are ignored.
  *
- * Every field has a default so Moshi's reflective adapter can tolerate missing keys.
+ * Every field has a default so Moshi's reflective adapter can tolerate **missing** keys. Note that a
+ * default does **not** protect against an explicit JSON `null`: Moshi's reflective `KotlinJsonAdapter`
+ * only falls back to a default when the key is absent, and throws `JsonDataException` when a key is
+ * present with `null`. Spotify sends `"images": null` for some playlists (and `"id": null` for local
+ * files), so every field Spotify may null out is declared **nullable** and coalesced in mapping.
  */
 
 /** `POST https://accounts.spotify.com/api/token` (PKCE: no client secret). */
@@ -44,7 +48,8 @@ data class SpotifyArtistDto(
 data class SpotifyAlbumDto(
     val id: String? = null,
     val name: String = "",
-    val images: List<SpotifyImageDto> = emptyList(),
+    /** Nullable: Spotify may send `"images": null`, which Moshi treats as an error for a non-null list. */
+    val images: List<SpotifyImageDto>? = null,
 )
 
 data class SpotifyExternalIdsDto(
@@ -53,7 +58,8 @@ data class SpotifyExternalIdsDto(
 
 /** A Spotify track object. `popularity`/`available_markets` are never read. */
 data class SpotifyTrackDto(
-    val id: String = "",
+    /** Nullable: local files (`is_local: true`) carry `"id": null`. */
+    val id: String? = null,
     val name: String = "",
     val artists: List<SpotifyArtistDto> = emptyList(),
     val album: SpotifyAlbumDto? = null,
@@ -85,7 +91,8 @@ data class SpotifyPlaylistDto(
     val id: String = "",
     val name: String = "",
     val owner: SpotifyOwnerDto? = null,
-    val images: List<SpotifyImageDto> = emptyList(),
+    /** Nullable: Spotify returns `"images": null` for some (e.g. empty/system) playlists. */
+    val images: List<SpotifyImageDto>? = null,
     val items: PlaylistItemsPage? = null,
 )
 

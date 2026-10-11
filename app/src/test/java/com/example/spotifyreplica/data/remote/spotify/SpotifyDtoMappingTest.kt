@@ -100,6 +100,29 @@ class SpotifyDtoMappingTest {
     }
 
     @Test
+    fun `playlist with explicit null images maps without crashing`() {
+        // Regression: Spotify sends `"images": null` for some playlists, which Moshi rejects for a
+        // non-null Kotlin list even though the constructor has a default.
+        val dto = playlistAdapter.fromJson(PLAYLIST_WITH_NULL_IMAGES_JSON)!!
+
+        assertNull(dto.images)
+        val summary = dto.toSummary()
+        assertEquals("Empty", summary.name)
+        assertNull(summary.artworkUrl)
+    }
+
+    @Test
+    fun `local track with null id and null album images falls back to its uri`() {
+        val dto = playlistAdapter.fromJson(PLAYLIST_WITH_LOCAL_FILE_JSON)!!
+        val page = dto.items!!.toTrackPage()
+
+        assertEquals(1, page.items.size)
+        val local = page.items.first()
+        assertEquals("spotify:local:Artist:Album:Song:123", local.id)
+        assertNull(local.artworkUrl)
+    }
+
+    @Test
     fun `search paging parses and respects the limit-10 cap`() {
         val dto = searchAdapter.fromJson(searchJson(itemCount = 10, total = 30))!!
 
@@ -208,6 +231,42 @@ class SpotifyDtoMappingTest {
                 "items": [
                   { "item": null },
                   { "item": { "id": "t9", "name": "Real Song", "artists": [], "album": { "name": "", "images": [] }, "duration_ms": 1 } }
+                ]
+              }
+            }
+        """.trimIndent()
+        val PLAYLIST_WITH_NULL_IMAGES_JSON = """
+            {
+              "id": "p2",
+              "name": "Empty",
+              "owner": { "display_name": "Bob" },
+              "images": null,
+              "items": { "total": 0, "offset": 0, "limit": 50, "items": [] }
+            }
+        """.trimIndent()
+
+        val PLAYLIST_WITH_LOCAL_FILE_JSON = """
+            {
+              "id": "p3",
+              "name": "Local",
+              "images": null,
+              "items": {
+                "total": 1,
+                "offset": 0,
+                "limit": 50,
+                "next": null,
+                "items": [
+                  {
+                    "item": {
+                      "id": null,
+                      "name": "Song",
+                      "artists": [ { "name": "Artist" } ],
+                      "album": { "name": "Album", "images": null },
+                      "duration_ms": 1000,
+                      "uri": "spotify:local:Artist:Album:Song:123",
+                      "is_local": true
+                    }
+                  }
                 ]
               }
             }
