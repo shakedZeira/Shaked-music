@@ -57,6 +57,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // NewPipeExtractor (optional YouTube resolver) uses modern java.nio APIs.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     buildFeatures {
@@ -127,6 +129,11 @@ dependencies {
     // Images
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Optional YouTube resolver (opt-in, off by default)
+    implementation(libs.newpipe.extractor)
+    implementation(libs.slf4j.simple)
+    coreLibraryDesugaring(libs.desugar.jdk.libs.nio)
 
     // Network (Spotify)
     implementation(libs.retrofit)

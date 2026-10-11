@@ -11,6 +11,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Required only by the OPTIONAL YouTube audio resolver (NewPipeExtractor).
+        maven("https://jitpack.io")
     }
 }
 

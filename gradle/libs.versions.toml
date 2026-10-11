@@ -29,6 +29,9 @@ androidxTestJunit = "1.3.0"
 androidxTestRunner = "1.7.0"
 androidxTestRules = "1.7.0"
 espresso = "3.7.0"
+newpipe = "v0.26.5"
+desugarNio = "2.1.5"
+slf4j = "2.0.20"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -90,3 +93,8 @@ androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "
 androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "work" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+
+# --- Optional YouTube audio resolver (opt-in; backed by NewPipeExtractor via JitPack) ---
+newpipe-extractor = { module = "com.github.TeamNewPipe:NewPipeExtractor", version.ref = "newpipe" }
+desugar-jdk-libs-nio = { module = "com.android.tools:desugar_jdk_libs_nio", version.ref = "desugarNio" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
