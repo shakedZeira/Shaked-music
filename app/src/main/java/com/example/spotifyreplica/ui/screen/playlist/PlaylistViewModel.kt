@@ -149,6 +149,14 @@ class PlaylistViewModel @Inject constructor(
         if (downloaded.isNotEmpty()) playback.setQueue(downloaded, startIndex = 0)
     }
 
+    /** Starts playback of the playlist's downloaded tracks in random order. */
+    fun playRandom() {
+        val downloaded = uiState.value.tracks
+            .mapNotNull { uiState.value.downloadedTracksByTrackId[it.id] }
+        if (downloaded.isEmpty()) return
+        playback.setQueue(downloaded.shuffled(), startIndex = 0)
+    }
+
     /** Plays a single loaded [track] when it is already downloaded; otherwise a no-op. */
     fun play(track: Track) {
         val local = uiState.value.downloadedTracksByTrackId[track.id] ?: return

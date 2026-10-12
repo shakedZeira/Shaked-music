@@ -18,6 +18,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -199,6 +200,42 @@ class PlaylistViewModelTest {
             viewModel.playDownloaded()
 
             verify(exactly = 1) { playback.setQueue(listOf(libraryTrack("t2")), 0) }
+        }
+
+    @Test
+    fun `playRandom queues the downloaded tracks in random order`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            coEvery { catalog.playlistTracks("p1", 0, PAGE_SIZE) } returns Result.success(
+                page(items = listOf(track("t1"), track("t2")), offset = 0, hasMore = false),
+            )
+            every { playback.setQueue(any(), any()) } returns Unit
+            val viewModel = createViewModel(
+                downloadedTracks = listOf(libraryTrack("t1"), libraryTrack("t2")),
+            )
+            subscribe(viewModel)
+            advanceUntilIdle()
+
+            viewModel.playRandom()
+
+            val listSlot = slot<List<LibraryTrack>>()
+            verify(exactly = 1) { playback.setQueue(capture(listSlot), 0) }
+            assertEquals(2, listSlot.captured.size)
+            assertEquals(setOf(libraryTrack("t1"), libraryTrack("t2")), listSlot.captured.toSet())
+        }
+
+    @Test
+    fun `playRandom is a no-op when nothing is downloaded`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            coEvery { catalog.playlistTracks("p1", 0, PAGE_SIZE) } returns Result.success(
+                page(items = listOf(track("t1"), track("t2")), offset = 0, hasMore = false),
+            )
+            val viewModel = createViewModel()
+            subscribe(viewModel)
+            advanceUntilIdle()
+
+            viewModel.playRandom()
+
+            verify(exactly = 0) { playback.setQueue(any(), any()) }
         }
 
     private fun TestScope.subscribe(viewModel: PlaylistViewModel) {

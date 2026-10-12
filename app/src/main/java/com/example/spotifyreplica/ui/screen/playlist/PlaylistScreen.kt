@@ -67,6 +67,7 @@ fun PlaylistScreen(
         onDownloadAll = viewModel::downloadAll,
         onPlayTrack = viewModel::play,
         onPlayDownloaded = viewModel::playDownloaded,
+        onPlayRandom = viewModel::playRandom,
         onLoadMore = viewModel::loadMore,
         onRetry = viewModel::retry,
         modifier = modifier,
@@ -81,6 +82,7 @@ private fun PlaylistContent(
     onDownloadAll: () -> Unit,
     onPlayTrack: (Track) -> Unit,
     onPlayDownloaded: () -> Unit,
+    onPlayRandom: () -> Unit,
     onLoadMore: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -121,6 +123,7 @@ private fun PlaylistContent(
                             uiState = uiState,
                             onDownloadAll = onDownloadAll,
                             onPlayDownloaded = onPlayDownloaded,
+                            onPlayRandom = onPlayRandom,
                         )
                     }
 
@@ -182,6 +185,7 @@ private fun PlaylistHeader(
     uiState: PlaylistUiState,
     onDownloadAll: () -> Unit,
     onPlayDownloaded: () -> Unit,
+    onPlayRandom: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -236,6 +240,8 @@ private fun PlaylistHeader(
             if (uiState.hasDownloads) {
                 Spacer(Modifier.width(8.dp))
                 TextButton(onClick = onPlayDownloaded) { Text("Play downloaded") }
+                Spacer(Modifier.width(8.dp))
+                TextButton(onClick = onPlayRandom) { Text("Shuffle play") }
             }
         }
 
