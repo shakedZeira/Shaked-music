@@ -42,6 +42,48 @@ class PlayerStateTest {
         assertEquals(0f, PlayerState(positionMs = -10L, durationMs = 200_000L).progressFraction, 0f)
     }
 
+    // --- seekTarget --------------------------------------------------------------------------
+
+    @Test
+    fun `seekTarget fast-forwards within the duration`() {
+        assertEquals(
+            60_000L,
+            PlayerState.seekTarget(positionMs = 50_000L, durationMs = 200_000L, deltaMs = 10_000L),
+        )
+    }
+
+    @Test
+    fun `seekTarget clamps a forward jump at the duration`() {
+        assertEquals(
+            200_000L,
+            PlayerState.seekTarget(positionMs = 195_000L, durationMs = 200_000L, deltaMs = 10_000L),
+        )
+    }
+
+    @Test
+    fun `seekTarget clamps a rewind at zero`() {
+        assertEquals(
+            0L,
+            PlayerState.seekTarget(positionMs = 5_000L, durationMs = 200_000L, deltaMs = -10_000L),
+        )
+    }
+
+    @Test
+    fun `seekTarget leaves an unknown duration unclamped above`() {
+        assertEquals(
+            20_000L,
+            PlayerState.seekTarget(positionMs = 10_000L, durationMs = 0L, deltaMs = 10_000L),
+        )
+    }
+
+    @Test
+    fun `seekTarget treats a negative position as zero`() {
+        assertEquals(
+            10_000L,
+            PlayerState.seekTarget(positionMs = -5_000L, durationMs = 200_000L, deltaMs = 10_000L),
+        )
+    }
+
     // --- hasMedia ----------------------------------------------------------------------------
 
     @Test

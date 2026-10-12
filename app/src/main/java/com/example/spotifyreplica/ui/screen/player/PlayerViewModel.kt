@@ -54,6 +54,12 @@ class PlayerViewModel @Inject constructor(
 
     fun seekTo(positionMs: Long) = playbackConnection.seekTo(positionMs)
 
+    /** Jumps [PlayerState.SEEK_STEP_MS] back from the current position, clamped at 0. */
+    fun rewind() = playbackConnection.seekBy(-PlayerState.SEEK_STEP_MS)
+
+    /** Jumps [PlayerState.SEEK_STEP_MS] ahead from the current position, clamped at the duration. */
+    fun fastForward() = playbackConnection.seekBy(PlayerState.SEEK_STEP_MS)
+
     /** Flips shuffle on/off. */
     fun toggleShuffle() = playbackConnection.setShuffle(!state.value.shuffleEnabled)
 

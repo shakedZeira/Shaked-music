@@ -1,12 +1,14 @@
 package com.example.spotifyreplica.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,21 +43,26 @@ import com.example.spotifyreplica.ui.screen.player.PlayerViewModel
 /**
  * Persistent mini player shown above the bottom navigation bar.
  *
- * Kept as a zero-argument `@Composable` (constructed directly by `MainActivity`). It resolves its own
- * [PlayerViewModel] via [hiltViewModel] and observes the same application-scoped playback session as
- * the full `PlayerScreen`, so controls stay in sync wherever they're shown.
+ * Kept as a zero-argument `@Composable` (constructed directly by `MainActivity`) aside from the
+ * [onOpenPlayer] callback, which lets the host navigate to the full `PlayerScreen`. It resolves its
+ * own [PlayerViewModel] via [hiltViewModel] and observes the same application-scoped playback session
+ * as the full player, so controls stay in sync wherever they're shown.
  *
- * This bar intentionally performs no navigation (the nav route is owned by `AppNavHost`/`MainActivity`,
- * which are out of scope for this phase); it exposes the transport control only.
+ * Tapping the row (when something is loaded) opens the full player, and a thin progress indicator
+ * pinned to the top edge surfaces the advancing timeline app-wide.
  */
 @Composable
-fun MiniPlayerBar(modifier: Modifier = Modifier) {
+fun MiniPlayerBar(
+    onOpenPlayer: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val viewModel: PlayerViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     MiniPlayerContent(
         state = state,
         onTogglePlayPause = viewModel::togglePlayPause,
+        onOpenPlayer = onOpenPlayer,
         modifier = modifier,
     )
 }
@@ -63,6 +71,7 @@ fun MiniPlayerBar(modifier: Modifier = Modifier) {
 private fun MiniPlayerContent(
     state: PlayerState,
     onTogglePlayPause: () -> Unit,
+    onOpenPlayer: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val track = state.currentTrack
@@ -72,58 +81,69 @@ private fun MiniPlayerContent(
         color = MaterialTheme.colorScheme.surfaceVariant,
         tonalElevation = 3.dp,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(MaterialTheme.colorScheme.surface),
+                    .fillMaxWidth()
+                    .clickable(enabled = state.hasMedia, onClick = onOpenPlayer)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                AsyncImage(
-                    model = track?.artworkUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(MaterialTheme.colorScheme.surface),
+                ) {
+                    AsyncImage(
+                        model = track?.artworkUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = track?.title ?: "Nothing is playing",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (track != null) FontWeight.Bold else FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = track?.artists?.joinToString(", ")
+                            ?: "Pick a downloaded track to start",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                IconButton(
+                    onClick = onTogglePlayPause,
+                    enabled = state.hasMedia,
+                ) {
+                    Icon(
+                        imageVector = if (state.isPlaying) MiniPauseIcon else Icons.Filled.PlayArrow,
+                        contentDescription = if (state.isPlaying) "Pause" else "Play",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
             }
 
-            Spacer(Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = track?.title ?: "Nothing is playing",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (track != null) FontWeight.Bold else FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = track?.artists?.joinToString(", ")
-                        ?: "Pick a downloaded track to start",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            IconButton(
-                onClick = onTogglePlayPause,
-                enabled = state.hasMedia,
-            ) {
-                Icon(
-                    imageVector = if (state.isPlaying) MiniPauseIcon else Icons.Filled.PlayArrow,
-                    contentDescription = if (state.isPlaying) "Pause" else "Play",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp),
-                )
-            }
+            LinearProgressIndicator(
+                progress = { state.progressFraction },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .align(Alignment.TopCenter),
+            )
         }
     }
 }

@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.spotifyreplica.ui.components.MiniPlayerBar
 import com.example.spotifyreplica.ui.navigation.AppNavHost
 import com.example.spotifyreplica.ui.navigation.BottomNav
+import com.example.spotifyreplica.ui.navigation.Screen
 import com.example.spotifyreplica.ui.theme.SpotifyReplicaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -35,7 +36,11 @@ private fun SpotifyReplicaApp() {
     Scaffold(
         bottomBar = {
             Column {
-                MiniPlayerBar()
+                MiniPlayerBar(
+                    onOpenPlayer = {
+                        navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                    },
+                )
                 BottomNav(navController = navController)
             }
         }

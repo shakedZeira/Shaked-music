@@ -102,6 +102,17 @@ class PlaybackConnection(
 
     fun seekTo(positionMs: Long) = withController { it.seekTo(positionMs.coerceAtLeast(0L)) }
 
+    /**
+     * Jumps [deltaMs] relative to the current position (negative rewinds, positive fast-forwards),
+     * clamped to the track bounds. Uses [PlayerState.seekTarget] for the pure clamping rules.
+     */
+    fun seekBy(deltaMs: Long) = withController { controller ->
+        val duration = controller.duration
+            .takeIf { it != C.TIME_UNSET && it > 0L }
+            ?: 0L
+        controller.seekTo(PlayerState.seekTarget(controller.currentPosition, duration, deltaMs))
+    }
+
     fun setShuffle(enabled: Boolean) = withController { it.shuffleModeEnabled = enabled }
 
     fun setRepeatMode(mode: Int) = withController { it.repeatMode = mode }

@@ -61,5 +61,25 @@ data class PlayerState(
 
         /** Matches `androidx.media3.common.Player.REPEAT_MODE_ALL`. */
         const val REPEAT_MODE_ALL = 2
+
+        /** Relative jump applied by the rewind/fast-forward transport buttons, in milliseconds. */
+        const val SEEK_STEP_MS = 10_000L
+
+        /**
+         * Computes the absolute seek position for a relative [deltaMs] jump from [positionMs].
+         *
+         * Pure and side-effect free so the clamping rules can be unit-tested on a plain JVM: the
+         * result is never negative, and when [durationMs] is greater than zero it is clamped into
+         * `0..durationMs`. An unknown duration (`0`) only clamps the lower bound, so a forward jump
+         * is not silently rewound to the start.
+         *
+         * @param positionMs current playback position; a negative value is treated as 0.
+         * @param durationMs known track duration, or 0 when unknown.
+         * @param deltaMs signed jump to apply (negative to rewind, positive to fast-forward).
+         */
+        fun seekTarget(positionMs: Long, durationMs: Long, deltaMs: Long): Long {
+            val target = positionMs.coerceAtLeast(0L) + deltaMs
+            return if (durationMs > 0L) target.coerceIn(0L, durationMs) else target.coerceAtLeast(0L)
+        }
     }
 }

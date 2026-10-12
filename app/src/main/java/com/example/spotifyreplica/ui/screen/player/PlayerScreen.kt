@@ -71,6 +71,8 @@ fun PlayerScreen(modifier: Modifier = Modifier) {
         onTogglePlayPause = viewModel::togglePlayPause,
         onNext = viewModel::next,
         onPrevious = viewModel::previous,
+        onRewind = viewModel::rewind,
+        onFastForward = viewModel::fastForward,
         onSeek = viewModel::seekTo,
         onToggleShuffle = viewModel::toggleShuffle,
         onCycleRepeat = viewModel::cycleRepeatMode,
@@ -86,6 +88,8 @@ private fun PlayerContent(
     onTogglePlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
+    onRewind: () -> Unit,
+    onFastForward: () -> Unit,
     onSeek: (Long) -> Unit,
     onToggleShuffle: () -> Unit,
     onCycleRepeat: () -> Unit,
@@ -107,6 +111,8 @@ private fun PlayerContent(
                 onTogglePlayPause = onTogglePlayPause,
                 onNext = onNext,
                 onPrevious = onPrevious,
+                onRewind = onRewind,
+                onFastForward = onFastForward,
                 onSeek = onSeek,
                 onToggleShuffle = onToggleShuffle,
                 onCycleRepeat = onCycleRepeat,
@@ -158,6 +164,8 @@ private fun NowPlayingHeader(
     onTogglePlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
+    onRewind: () -> Unit,
+    onFastForward: () -> Unit,
     onSeek: (Long) -> Unit,
     onToggleShuffle: () -> Unit,
     onCycleRepeat: () -> Unit,
@@ -219,6 +227,14 @@ private fun NowPlayingHeader(
                 )
             }
             Spacer(Modifier.width(12.dp))
+            IconButton(onClick = onRewind, enabled = state.hasMedia) {
+                Icon(
+                    imageVector = RewindIcon,
+                    contentDescription = "Rewind 10 seconds",
+                    modifier = Modifier.size(36.dp),
+                )
+            }
+            Spacer(Modifier.width(12.dp))
             FilledIconButton(
                 onClick = onTogglePlayPause,
                 enabled = state.hasMedia,
@@ -228,6 +244,14 @@ private fun NowPlayingHeader(
                     imageVector = if (state.isPlaying) PauseIcon else Icons.Filled.PlayArrow,
                     contentDescription = if (state.isPlaying) "Pause" else "Play",
                     modifier = Modifier.size(40.dp),
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            IconButton(onClick = onFastForward, enabled = state.hasMedia) {
+                Icon(
+                    imageVector = ForwardIcon,
+                    contentDescription = "Fast-forward 10 seconds",
+                    modifier = Modifier.size(36.dp),
                 )
             }
             Spacer(Modifier.width(12.dp))
@@ -421,6 +445,32 @@ private val PreviousIcon: ImageVector by lazy {
         moveTo(18f, 6f)
         verticalLineTo(18f)
         lineTo(9.5f, 12f)
+        close()
+    }
+}
+
+private val ForwardIcon: ImageVector by lazy {
+    transportIcon("FastForward") {
+        moveTo(4f, 6f)
+        lineTo(11f, 12f)
+        lineTo(4f, 18f)
+        close()
+        moveTo(12f, 6f)
+        lineTo(19f, 12f)
+        lineTo(12f, 18f)
+        close()
+    }
+}
+
+private val RewindIcon: ImageVector by lazy {
+    transportIcon("FastRewind") {
+        moveTo(20f, 6f)
+        lineTo(13f, 12f)
+        lineTo(20f, 18f)
+        close()
+        moveTo(12f, 6f)
+        lineTo(5f, 12f)
+        lineTo(12f, 18f)
         close()
     }
 }
